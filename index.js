@@ -28,7 +28,7 @@
       });
       runner.on('end', function() {
         $.ajax({
-          url: 'http://local.t04st.com:3000/' + t04st.conf.org + '/' + t04st.conf.name + '/' + t04st.conf.version,
+          url: 'http://t04st.com/' + t04st.conf.org + '/' + t04st.conf.name + '/' + t04st.conf.version,
           type: "POST",
           crossDomain: true,
           data: {
