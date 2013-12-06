@@ -1,33 +1,54 @@
-var t04st = function( runner, root ) {
-  var suites = {};
-  runner.on('suite', function( suite ) {
-    if(suite.title.length) {
-      suites[suite.title] = [];
-    }
-    console.log("#cSuite: " + suite.title, 'color: blue');
-  });
-  runner.on('test end', function( test ) {
-    var parent = suites[test.parent.title];
-    if(parent) {
-      parent.push({
-        title: test.title,
-        status: (test.state !== 'failed')
+(function() {
+  var t04st;
+  t04st = function( conf, root ) {
+    // If being called from mocha.run()
+    if( window.Mocha && conf instanceof Mocha.Runner ) {
+      var runner = conf;
+      var suites = {};
+      runner.on('suite', function( suite ) {
+        if(suite.title.length) {
+          suites[suite.title] = [];
+          console.log("%cSuite: " + suite.title, 'color: blue');
+        }
+      });
+      runner.on('test end', function( test ) {
+        var parent = suites[test.parent.title];
+        if(parent) {
+          parent.push({
+            title: test.title,
+            state: test.state
+          });
+        }
+        if(test.state === 'failed') {
+          console.log('%cTest failed: ' + test.parent.title + '::' + test.title, "color: red");
+        }
+        else {
+          console.log('%cTest passed: ' + test.parent.title + '::' + test.title, "color: #67a017");
+        }
+      });
+      runner.on('end', function() {
+        $.ajax({
+          url: 'http://local.t04st.com:3000/' + t04st.conf.org + '/' + t04st.conf.name + '/' + t04st.conf.version,
+          type: "POST",
+          crossDomain: true,
+          data: {
+            userAgent: navigator.userAgent,
+            results: {
+              suites: suites
+            }
+          },
+          dataType: "json"
+        });
       });
     }
-    if(test.state === 'failed') {
-      console.log('%c Test failed: ' + test.parent.title + '::' + test.title, "color: red");
-    }
     else {
-      console.log('%c Test passed: ' + test.parent.title + '::' + test.title, "color: #67a017");
+      t04st.conf = conf;
     }
-  });
-  runner.on('end', function() {
-    console.log('done');
+  };
 
-  });
-};
-if (window.mocha) {
-  mocha.reporter(t04st);
-} else {
+  t04st.conf = {};
   window.t04st = t04st;
-}
+  if (window.mocha) {
+    mocha.reporter(t04st);
+  }
+})()
